@@ -4,5 +4,5 @@
   "description": "تعديل شكل وقت الرسائل بالكامل",
   "author": "Adham",
   "version": "1.0.0",
-  "dist.script": "dist/index.js"
+  "dist.script": "index.js"
 }

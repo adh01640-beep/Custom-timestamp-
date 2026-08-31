@@ -25,7 +25,9 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b build || git checkout build
-          # رفع مجلد الـ dist الرئيسي الذي يحتوي على الناتج النهائي
-          git add dist/ -f
-          git commit -m "🚀 Auto-build plugins" || true
+          
+          # إجبار النظام على البحث عن أي مخرجات بناء ورفعها أينما كانت
+          find . -name "*.js" -not -path "./node_modules*" -not -path "./.git*"
+          git add -A
+          git commit -m "🚀 Auto-build plugins successfully" || true
           git push origin build -f

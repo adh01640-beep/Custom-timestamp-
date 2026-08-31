@@ -25,16 +25,10 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # إنشاء فرع نظيف ومستقل للبناء
-          git checkout --orphan build
-          git rm -rf . || true
+          # الانتقال أو إنشاء فرع البناء مع الاحتفاظ بملفات البلجن الناتجة
+          git checkout -b build || git checkout build
           
-          # جلب ملفات الـ Manifest ومجلدات البناء من الفرع الرئيسي
-          git checkout main -- plugins/ || true
-          if [ -d "dist" ]; then
-            git checkout main -- dist/ || true
-          fi
-          
+          # إضافة جميع الملفات (المصدرية والناتجة بعد البناء)
           git add -A
-          git commit -m "🚀 Deploy plugins and manifests" || true
+          git commit -m "🚀 Auto-build and deploy plugins successfully" || true
           git push origin build -f

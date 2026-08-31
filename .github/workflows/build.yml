@@ -1,0 +1,30 @@
+name: Build Revenge Plugins
+on:
+  push:
+    branches: [ main, master ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Fix Browserslist Error
+        run: sed -i 's/"fully supports es6"/"defaults"/g' package.json || true
+      - name: Install Dependencies
+        run: npm install --legacy-peer-deps
+      - name: Build Plugins
+        run: npm run build
+      - name: Deploy to Build Branch
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b build
+          git add plugins/*/dist* -f
+          git commit -m "🚀 Auto-build plugins" || true
+          git push origin build -f

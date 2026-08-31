@@ -20,17 +20,17 @@ jobs:
         run: npm install --legacy-peer-deps
       - name: Build Plugins
         run: npx tsx node_modules/@revenge-mod/plugin-cli/src/main.ts build
-      - name: Verify Build Output
+      - name: Move and Align Files
         run: |
-          ls -la plugins/custom-timestamps/dist/ || echo "Check build path"
+          # البحث عن ملف الـ JS الناتج ونسخه مباشرة جوه مجلد البلجن جنب الـ manifest
+          find . -name "index.js" -not -path "./node_modules*" -exec cp {} plugins/custom-timestamps/index.js \; || true
+          ls -la plugins/custom-timestamps/
       - name: Deploy to Build Branch
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
           git checkout -b build || git checkout build
-          
-          # رفع مجلد البلجنات كاملاً بكل محتوياته (Manifest + Dist)
           git add plugins/ -f
-          git commit -m "🚀 Final absolute fix: deploy plugin with compiled js" || true
+          git commit -m "🚀 Ultimate fix: Manifest and JS are now together" || true
           git push origin build -f

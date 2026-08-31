@@ -25,7 +25,7 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b build || git checkout build
-          # رفع ملف الـ Manifest والـ Dist معاً
-          git add plugins/*/manifest.json plugins/*/dist* -f
-          git commit -m "🚀 Auto-build plugins with manifest" || true
+          # رفع مجلد الـ dist الرئيسي الذي يحتوي على الناتج النهائي
+          git add dist/ -f
+          git commit -m "🚀 Auto-build plugins" || true
           git push origin build -f

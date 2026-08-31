@@ -20,15 +20,17 @@ jobs:
         run: npm install --legacy-peer-deps
       - name: Build Plugins
         run: npx tsx node_modules/@revenge-mod/plugin-cli/src/main.ts build
+      - name: Verify Build Output
+        run: |
+          ls -la plugins/custom-timestamps/dist/ || echo "Check build path"
       - name: Deploy to Build Branch
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # الانتقال أو إنشاء فرع البناء مع الاحتفاظ بملفات البلجن الناتجة
           git checkout -b build || git checkout build
           
-          # إضافة جميع الملفات (المصدرية والناتجة بعد البناء)
-          git add -A
-          git commit -m "🚀 Auto-build and deploy plugins successfully" || true
+          # رفع مجلد البلجنات كاملاً بكل محتوياته (Manifest + Dist)
+          git add plugins/ -f
+          git commit -m "🚀 Final absolute fix: deploy plugin with compiled js" || true
           git push origin build -f

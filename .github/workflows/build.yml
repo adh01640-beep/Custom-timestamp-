@@ -18,13 +18,13 @@ jobs:
         run: sed -i 's/"fully supports es6"/"defaults"/g' package.json || true
       - name: Install Dependencies
         run: npm install --legacy-peer-deps
-      - name: Build Plugins
-        run: npm run build
+      - name: Build Plugins (Using TSX)
+        run: npx tsx node_modules/@revenge-mod/plugin-cli/src/main.ts build
       - name: Deploy to Build Branch
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b build
-          git add plugins/*/dist* -f
+          git checkout -b build || git checkout build
+          git add plugins/*/dist* -f || true
           git commit -m "🚀 Auto-build plugins" || true
           git push origin build -f

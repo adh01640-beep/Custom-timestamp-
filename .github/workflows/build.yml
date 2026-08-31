@@ -18,16 +18,23 @@ jobs:
         run: sed -i 's/"fully supports es6"/"defaults"/g' package.json || true
       - name: Install Dependencies
         run: npm install --legacy-peer-deps
-      - name: Build Plugins (Using TSX)
+      - name: Build Plugins
         run: npx tsx node_modules/@revenge-mod/plugin-cli/src/main.ts build
       - name: Deploy to Build Branch
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b build || git checkout build
           
-          # إجبار النظام على البحث عن أي مخرجات بناء ورفعها أينما كانت
-          find . -name "*.js" -not -path "./node_modules*" -not -path "./.git*"
+          # إنشاء فرع نظيف ومستقل للبناء
+          git checkout --orphan build
+          git rm -rf . || true
+          
+          # جلب ملفات الـ Manifest ومجلدات البناء من الفرع الرئيسي
+          git checkout main -- plugins/ || true
+          if [ -d "dist" ]; then
+            git checkout main -- dist/ || true
+          fi
+          
           git add -A
-          git commit -m "🚀 Auto-build plugins successfully" || true
+          git commit -m "🚀 Deploy plugins and manifests" || true
           git push origin build -f

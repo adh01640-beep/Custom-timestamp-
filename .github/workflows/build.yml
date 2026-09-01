@@ -1,4 +1,4 @@
-name: Build Revenge Plugins
+name: Build Revenge Plugin
 on:
   push:
     branches: [ main, master ]
@@ -20,17 +20,22 @@ jobs:
         run: npm install --legacy-peer-deps
       - name: Build Plugins
         run: npx tsx node_modules/@revenge-mod/plugin-cli/src/main.ts build
-      - name: Move and Align Files
+      - name: Prepare Root Deployment
         run: |
-          # البحث عن ملف الـ JS الناتج ونسخه مباشرة جوه مجلد البلجن جنب الـ manifest
-          find . -name "index.js" -not -path "./node_modules*" -exec cp {} plugins/custom-timestamps/index.js \; || true
-          ls -la plugins/custom-timestamps/
+          mkdir -p public_build
+          cp plugins/custom-timestamps/manifest.json public_build/
+          find . -name "index.js" -not -path "./node_modules*" -exec cp {} public_build/index.js \; || true
       - name: Deploy to Build Branch
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          git checkout -b build || git checkout build
-          git add plugins/ -f
-          git commit -m "🚀 Ultimate fix: Manifest and JS are now together" || true
+          git checkout --orphan build
+          git rm -rf . || true
+          
+          cp -r public_build/* .
+          rm -rf public_build
+          
+          git add manifest.json index.js
+          git commit -m "🚀 Ultimate clean deploy to root" || true
           git push origin build -f

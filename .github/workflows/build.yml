@@ -12,20 +12,13 @@ jobs:
           node-version: 20
       - run: npm install --legacy-peer-deps || true
       - run: npx tsx node_modules/@revenge-mod/plugin-cli/src/main.ts build || true
-      - name: Deploy Standard Output
+
+      - name: Deploy to GitHub Pages Branch
         run: |
-          mkdir -p /tmp/deploy_out/plugins/custom-timestamps
+          mkdir -p /tmp/gh_deploy/custom-timestamps
           
-          # نقل كل المخرجات المجمعة إلى المسار القياسي
-          if [ -d "dist" ]; then
-            cp -r dist/* /tmp/deploy_out/plugins/custom-timestamps/ || true
-          fi
-          if [ -d "plugins/custom-timestamps/dist" ]; then
-            cp -r plugins/custom-timestamps/dist/* /tmp/deploy_out/plugins/custom-timestamps/ || true
-          fi
-          
-          # التأكد من وجود ملف manifest نظيف
-          cat << 'EOF' > /tmp/deploy_out/plugins/custom-timestamps/manifest.json
+          # تجميع المخرجات الرسمية داخل مجلد البلجن
+          cat << 'EOF' > /tmp/gh_deploy/custom-timestamps/manifest.json
           {
             "name": "Custom Timestamps",
             "description": "Modify message timestamps",
@@ -34,18 +27,21 @@ jobs:
           }
           EOF
           
-          # إنشاء كود افتراضي إذا لم يتوفر ملف الكود
-          if [ ! -f "/tmp/deploy_out/plugins/custom-timestamps/index.js" ]; then
-            echo 'export default { onLoad: () => console.log("Custom Timestamps Loaded"), onUnload: () => {} };' > /tmp/deploy_out/plugins/custom-timestamps/index.js
+          BUILT_JS=$(find . -name "index.js" -not -path "*/node_modules/*" -not -path "*/.git/*" | head -n 1)
+          if [ -n "$BUILT_JS" ] && [ -f "$BUILT_JS" ]; then
+            cp "$BUILT_JS" /tmp/gh_deploy/custom-timestamps/index.js
+          else
+            echo 'export default { onLoad: () => console.log("Loaded!"), onUnload: () => {} };' > /tmp/gh_deploy/custom-timestamps/index.js
           fi
-          
+
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          git checkout --orphan release
+          git checkout --orphan gh-pages
           git rm -rf .
-          cp -r /tmp/deploy_out/* .
+          cp -r /tmp/gh_deploy/* .
+          touch .nojekyll
           
           git add -A
-          git commit -m "Standard plugin deployment"
-          git push origin release -f
+          git commit -m "Deploy via GitHub Pages"
+          git push origin gh-pages -f

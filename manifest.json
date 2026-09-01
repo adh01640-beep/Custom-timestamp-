@@ -1,0 +1,6 @@
+{
+  "name": "Custom Timestamps",
+  "description": "Modify message timestamps",
+  "authors": [{"name": "Adham", "id": "1"}],
+  "main": "index.js"
+}

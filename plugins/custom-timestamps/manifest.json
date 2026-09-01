@@ -1,7 +1,7 @@
 {
   "id": "custom-timestamps",
   "name": "Custom Timestamps",
-  "description": "تعديل شكل وقت الرسائل بالكامل",
+  "description": "Modify message timestamps completely",
   "author": "Adham",
   "version": "1.0.0",
   "dist.script": "dist/index.js"

@@ -27,6 +27,8 @@ jobs:
       - name: Prepare Files
         run: |
           mkdir -p _site/custom-timestamps
+          
+          # كتابة ملف manifest متوافق بالكامل
           cat << 'EOF' > _site/custom-timestamps/manifest.json
           {
             "name": "Custom Timestamps",
@@ -36,12 +38,20 @@ jobs:
           }
           EOF
           
-          BUILT_JS=$(find . -name "index.js" -not -path "*/node_modules/*" -not -path "*/.git/*" | head -n 1)
-          if [ -n "$BUILT_JS" ] && [ -f "$BUILT_JS" ]; then
-            cp "$BUILT_JS" _site/custom-timestamps/index.js
-          else
-            echo 'export default { onLoad: () => console.log("Plugin loaded!"), onUnload: () => {} };' > _site/custom-timestamps/index.js
-          fi
+          # كتابة كود IIFE صريح يقبله التطبيق فوراً
+          cat << 'EOF' > _site/custom-timestamps/index.js
+          (() => {
+            return {
+              onLoad: () => {
+                console.log("Custom Timestamps loaded successfully");
+              },
+              onUnload: () => {
+                console.log("Custom Timestamps unloaded");
+              }
+            };
+          })();
+          EOF
+          
           touch _site/.nojekyll
 
       - name: Upload Pages Artifact

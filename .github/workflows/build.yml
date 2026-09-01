@@ -1,4 +1,4 @@
-name: Build Revenge Plugin
+name: Build Revenge Plugins
 on:
   push:
     branches: [ main, master ]
@@ -14,28 +14,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Fix Browserslist Error
+      - name: Fix Browserslist
         run: sed -i 's/"fully supports es6"/"defaults"/g' package.json || true
       - name: Install Dependencies
         run: npm install --legacy-peer-deps
       - name: Build Plugins
         run: npx tsx node_modules/@revenge-mod/plugin-cli/src/main.ts build
-      - name: Prepare Root Deployment
-        run: |
-          mkdir -p public_build
-          cp plugins/custom-timestamps/manifest.json public_build/
-          find . -name "index.js" -not -path "./node_modules*" -exec cp {} public_build/index.js \; || true
       - name: Deploy to Build Branch
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          
-          git checkout --orphan build
-          git rm -rf . || true
-          
-          cp -r public_build/* .
-          rm -rf public_build
-          
-          git add manifest.json index.js
-          git commit -m "🚀 Ultimate clean deploy to root" || true
+          git checkout -B build
+          git add plugins/*/dist/ -f
+          git commit -m "Deploy standard plugin structure" || true
           git push origin build -f

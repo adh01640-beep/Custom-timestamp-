@@ -24,12 +24,12 @@ jobs:
       - run: npm install --legacy-peer-deps || true
       - run: npx tsx node_modules/@revenge-mod/plugin-cli/src/main.ts build || true
 
-      - name: Prepare Files
+      - name: Prepare Proper Plugins Structure
         run: |
+          mkdir -p _site/plugins/custom-timestamps
           mkdir -p _site/custom-timestamps
           
-          # كتابة ملف manifest متوافق بالكامل
-          cat << 'EOF' > _site/custom-timestamps/manifest.json
+          cat << 'EOF' > manifest.json
           {
             "name": "Custom Timestamps",
             "description": "Modify message timestamps",
@@ -38,20 +38,18 @@ jobs:
           }
           EOF
           
-          # كتابة كود IIFE صريح يقبله التطبيق فوراً
-          cat << 'EOF' > _site/custom-timestamps/index.js
+          cat << 'EOF' > index.js
           (() => {
             return {
-              onLoad: () => {
-                console.log("Custom Timestamps loaded successfully");
-              },
-              onUnload: () => {
-                console.log("Custom Timestamps unloaded");
-              }
+              onLoad: () => console.log("Custom Timestamps loaded"),
+              onUnload: () => console.log("Custom Timestamps unloaded")
             };
           })();
           EOF
-          
+
+          # نسخ الملفات في المسارين (plugins/ و المسار المباشر) لضمان القراءة
+          cp manifest.json index.js _site/plugins/custom-timestamps/
+          cp manifest.json index.js _site/custom-timestamps/
           touch _site/.nojekyll
 
       - name: Upload Pages Artifact

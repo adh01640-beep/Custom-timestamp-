@@ -12,40 +12,32 @@ jobs:
           node-version: 20
       - run: npm install --legacy-peer-deps || true
       
-      # 1. تجهيز الكود المصدري بالشكل الذي تطلبه الأداة الرسمية بدقة
-      - name: Setup Valid Source
-        run: |
-          mkdir -p plugins/custom-timestamps/src
-          cat << 'EOF' > plugins/custom-timestamps/manifest.json
-          {
-            "id": "custom-timestamps",
-            "name": "Custom Timestamps",
-            "description": "Modify message timestamps",
-            "author": "Adham",
-            "version": "1.0.0",
-            "main": "index.js"
-          }
-          EOF
-          cat << 'EOF' > plugins/custom-timestamps/src/index.ts
-          export default {
-            onLoad: () => console.log("Plugin loaded successfully!"),
-            onUnload: () => console.log("Plugin unloaded!")
-          };
-          EOF
-
-      # 2. البناء عبر الأداة الرسمية لتوليد ملفات JS مشفرة ومعتمدة لديسكورد
-      - name: Build with Official CLI
+      - name: Build Plugins
         run: npx tsx node_modules/@revenge-mod/plugin-cli/src/main.ts build
 
-      # 3. عزل مجلد المخرجات الرسمي ورفعه كفرع مستقل نظيف
       - name: Deploy Built Plugin
         run: |
+          mkdir -p /tmp/final_deploy
+          
+          # جلب المخرجات من مسار dist الحقيقي الذي تولده الأداة
+          if [ -d "dist/custom-timestamps" ]; then
+            cp -r dist/custom-timestamps/* /tmp/final_deploy/
+          elif [ -d "dist" ]; then
+            cp -r dist/* /tmp/final_deploy/
+          fi
+          
+          # في حال وجود ملف manifest في plugins ولم يُنسخ
+          if [ ! -f "/tmp/final_deploy/manifest.json" ] && [ -f "plugins/custom-timestamps/manifest.json" ]; then
+            cp plugins/custom-timestamps/manifest.json /tmp/final_deploy/
+          fi
+
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          cd plugins/custom-timestamps/dist
-          git init
-          git checkout -b final-plugin
-          git add .
+          git checkout --orphan final-plugin
+          git rm -rf .
+          cp -r /tmp/final_deploy/* .
+          
+          git add -A
           git commit -m "Deploy official built plugin"
-          git push -f https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git final-plugin
+          git push origin final-plugin -f

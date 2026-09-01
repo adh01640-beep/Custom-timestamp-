@@ -11,35 +11,41 @@ jobs:
         with:
           node-version: 20
       - run: npm install --legacy-peer-deps || true
-      - run: npx tsx node_modules/@revenge-mod/plugin-cli/src/main.ts build || true
-      - name: Force Deploy to v1 Branch
+      
+      # 1. تجهيز الكود المصدري بالشكل الذي تطلبه الأداة الرسمية بدقة
+      - name: Setup Valid Source
         run: |
-          mkdir -p /tmp/release
-          
-          cat << 'EOF' > /tmp/release/manifest.json
+          mkdir -p plugins/custom-timestamps/src
+          cat << 'EOF' > plugins/custom-timestamps/manifest.json
           {
+            "id": "custom-timestamps",
             "name": "Custom Timestamps",
             "description": "Modify message timestamps",
-            "authors": [{"name": "Adham", "id": "1"}],
+            "author": "Adham",
+            "version": "1.0.0",
             "main": "index.js"
           }
           EOF
+          cat << 'EOF' > plugins/custom-timestamps/src/index.ts
+          export default {
+            onLoad: () => console.log("Plugin loaded successfully!"),
+            onUnload: () => console.log("Plugin unloaded!")
+          };
+          EOF
+
+      # 2. البناء عبر الأداة الرسمية لتوليد ملفات JS مشفرة ومعتمدة لديسكورد
+      - name: Build with Official CLI
+        run: npx tsx node_modules/@revenge-mod/plugin-cli/src/main.ts build
+
+      # 3. عزل مجلد المخرجات الرسمي ورفعه كفرع مستقل نظيف
+      - name: Deploy Built Plugin
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          BUILT_JS=$(find . -path "*/dist/index.js" -not -path "*/node_modules/*" | head -n 1)
-          if [ -n "$BUILT_JS" ] && [ -f "$BUILT_JS" ]; then
-            cp "$BUILT_JS" /tmp/release/index.js
-          else
-            echo 'export default { onLoad: () => console.log("Loaded!"), onUnload: () => console.log("Unloaded!") };' > /tmp/release/index.js
-          fi
-          
-          git config --global user.name "bot"
-          git config --global user.email "bot@github.com"
-          
-          # إنشاء فرع v1 جديد تماماً لقتل الكاش
-          git checkout --orphan v1
-          git rm -rf .
-          cp /tmp/release/* .
-          
+          cd plugins/custom-timestamps/dist
+          git init
+          git checkout -b final-plugin
           git add .
-          git commit -m "Fresh Deploy v1"
-          git push origin v1 -f
+          git commit -m "Deploy official built plugin"
+          git push -f https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git final-plugin

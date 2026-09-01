@@ -24,12 +24,12 @@ jobs:
       - run: npm install --legacy-peer-deps || true
       - run: npx tsx node_modules/@revenge-mod/plugin-cli/src/main.ts build || true
 
-      - name: Match Working Plugin Structure
+      - name: Match Repo Structure for Pages
         run: |
-          mkdir -p _site/custom-timestamp
+          # بناء مسار يطابق هيكل اسم المستودع بالضبط
+          mkdir -p _site/Custom-timestamp-/custom-timestamp
           
-          # ملف الـ Manifest بنفس هيكل المطور الناجح
-          cat << 'EOF' > _site/custom-timestamp/manifest.json
+          cat << 'EOF' > _site/Custom-timestamp-/custom-timestamp/manifest.json
           {
             "name": "Custom Timestamps",
             "description": "Modify message timestamps",
@@ -38,8 +38,7 @@ jobs:
           }
           EOF
           
-          # ملف الكود الـ IIFE المباشر الذي لا يحتمل أي خطأ
-          cat << 'EOF' > _site/custom-timestamp/index.js
+          cat << 'EOF' > _site/Custom-timestamp-/custom-timestamp/index.js
           (() => {
             return {
               onLoad: () => console.log("Custom Timestamps Loaded!"),

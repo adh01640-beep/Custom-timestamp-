@@ -25,6 +25,8 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -B build
-          git add plugins/*/dist/ -f
-          git commit -m "Deploy standard plugin structure" || true
+          
+          # رفع المجلد بالكامل متضمناً الـ manifest والـ dist بدون علامات النجمة
+          git add plugins/ -f
+          git commit -m "Deploy standard plugin structure successfully" || true
           git push origin build -f

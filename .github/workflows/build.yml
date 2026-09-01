@@ -12,28 +12,22 @@ jobs:
           node-version: 20
       - run: npm install --legacy-peer-deps || true
       
-      - name: 1. Setup Plugin Structure
+      - name: 1. Try Build
+        run: npx tsx node_modules/@revenge-mod/plugin-cli/src/main.ts build || true
+
+      - name: 2. Force Deploy to Ready Branch
         run: |
-          mkdir -p plugins/custom-timestamps/src
-          cat << 'EOF' > plugins/custom-timestamps/manifest.json
+          mkdir -p /tmp/final_deploy
+          
+          # ملف التعريف بالصيغة القياسية لـ Revenge (استخدام main)
+          cat << 'EOF' > /tmp/final_deploy/manifest.json
           {
-            "id": "custom-timestamps",
             "name": "Custom Timestamps",
             "description": "Modify message timestamps",
             "author": "Adham",
-            "version": "1.0.0",
-            "dist.script": "index.js"
+            "main": "index.js"
           }
           EOF
-
-      - name: 2. Try Build
-        run: npx tsx node_modules/@revenge-mod/plugin-cli/src/main.ts build || true
-
-      - name: 3. Force Deploy to Ready Branch
-        run: |
-          # حفظ الملفات مؤقتاً خارج المسار
-          mkdir -p /tmp/final_deploy
-          cp plugins/custom-timestamps/manifest.json /tmp/final_deploy/manifest.json
           
           BUILT_JS=$(find plugins/custom-timestamps -name "index.js" -not -path "*/node_modules/*" | head -n 1)
           
@@ -43,16 +37,13 @@ jobs:
             echo 'export default { onLoad: () => console.log("Loaded!"), onUnload: () => console.log("Unloaded!") };' > /tmp/final_deploy/index.js
           fi
           
-          # إعداد الحساب الوهمي للرفع
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # الانتقال لفرع ready وحذف القديم ثم استرجاع الملفات النظيفة
           git checkout --orphan ready
           git rm -rf .
           cp /tmp/final_deploy/* .
           
-          # الرفع باستخدام صلاحيات GitHub الأصلية المضمونة
           git add index.js manifest.json
-          git commit -m "Bulletproof auth deploy"
+          git commit -m "Fix manifest main property"
           git push origin ready -f

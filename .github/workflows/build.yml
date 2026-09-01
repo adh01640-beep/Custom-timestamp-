@@ -11,39 +11,35 @@ jobs:
         with:
           node-version: 20
       - run: npm install --legacy-peer-deps || true
-      
-      - name: 1. Try Build
-        run: npx tsx node_modules/@revenge-mod/plugin-cli/src/main.ts build || true
-
-      - name: 2. Force Deploy to Ready Branch
+      - run: npx tsx node_modules/@revenge-mod/plugin-cli/src/main.ts build || true
+      - name: Force Deploy to v1 Branch
         run: |
-          mkdir -p /tmp/final_deploy
+          mkdir -p /tmp/release
           
-          # ملف التعريف بالصيغة القياسية لـ Revenge (استخدام main)
-          cat << 'EOF' > /tmp/final_deploy/manifest.json
+          cat << 'EOF' > /tmp/release/manifest.json
           {
             "name": "Custom Timestamps",
             "description": "Modify message timestamps",
-            "author": "Adham",
+            "authors": [{"name": "Adham", "id": "1"}],
             "main": "index.js"
           }
           EOF
           
-          BUILT_JS=$(find plugins/custom-timestamps -name "index.js" -not -path "*/node_modules/*" | head -n 1)
-          
+          BUILT_JS=$(find . -path "*/dist/index.js" -not -path "*/node_modules/*" | head -n 1)
           if [ -n "$BUILT_JS" ] && [ -f "$BUILT_JS" ]; then
-            cp "$BUILT_JS" /tmp/final_deploy/index.js
+            cp "$BUILT_JS" /tmp/release/index.js
           else
-            echo 'export default { onLoad: () => console.log("Loaded!"), onUnload: () => console.log("Unloaded!") };' > /tmp/final_deploy/index.js
+            echo 'export default { onLoad: () => console.log("Loaded!"), onUnload: () => console.log("Unloaded!") };' > /tmp/release/index.js
           fi
           
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "bot"
+          git config --global user.email "bot@github.com"
           
-          git checkout --orphan ready
+          # إنشاء فرع v1 جديد تماماً لقتل الكاش
+          git checkout --orphan v1
           git rm -rf .
-          cp /tmp/final_deploy/* .
+          cp /tmp/release/* .
           
-          git add index.js manifest.json
-          git commit -m "Fix manifest main property"
-          git push origin ready -f
+          git add .
+          git commit -m "Fresh Deploy v1"
+          git push origin v1 -f

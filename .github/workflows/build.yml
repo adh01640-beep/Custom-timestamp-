@@ -12,18 +12,20 @@ jobs:
           node-version: 20
       - run: npm install --legacy-peer-deps
       - run: npx tsx node_modules/@revenge-mod/plugin-cli/src/main.ts build
-      - name: Push to Ready Branch
+      - name: Deploy to Ready Branch
         run: |
-          mkdir final_deploy
-          # نسخ ملف الكود النهائي فقط
-          cp plugins/custom-timestamps/dist/index.js final_deploy/index.js
+          mkdir -p final_deploy
           
-          # إنشاء ملف تعريف نظيف ومضمون 100%
+          # التقاط ملف الكود النهائي الناتج عن مجلد js
+          BUILT_JS=$(find plugins/custom-timestamps -type f -path "*/dist/index.js" | head -n 1)
+          cp "$BUILT_JS" final_deploy/index.js
+          
+          # إنشاء ملف تعريف نظيف ومضمون
           cat << 'EOF' > final_deploy/manifest.json
           {
             "id": "custom-timestamps",
             "name": "Custom Timestamps",
-            "description": "Change timestamp for all the messages the same as you want.",
+            "description": "تعديل شكل وقت الرسائل بالكامل",
             "author": "Adham",
             "version": "1.0.0",
             "dist.script": "index.js"
@@ -36,5 +38,5 @@ jobs:
           git config user.email "bot@github.com"
           git checkout -b ready
           git add .
-          git commit -m "Final absolute deploy"
+          git commit -m "Deploy from js/index.ts"
           git push -f https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git ready

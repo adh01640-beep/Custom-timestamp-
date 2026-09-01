@@ -12,20 +12,23 @@ jobs:
           node-version: 20
       - run: npm install --legacy-peer-deps
       - run: npx tsx node_modules/@revenge-mod/plugin-cli/src/main.ts build
-      - name: Deploy to Ready Branch
+      - name: Force Find and Deploy
         run: |
           mkdir -p final_deploy
+          BUILT_JS=$(find plugins/custom-timestamps -name "index.js" -not -path "*/node_modules/*" | head -n 1)
           
-          # التقاط ملف الكود النهائي الناتج عن مجلد js
-          BUILT_JS=$(find plugins/custom-timestamps -type f -path "*/dist/index.js" | head -n 1)
+          if [ -z "$BUILT_JS" ]; then
+            echo "🚨 JS file not found! Check your index.ts"
+            exit 1
+          fi
+          
           cp "$BUILT_JS" final_deploy/index.js
           
-          # إنشاء ملف تعريف نظيف ومضمون
           cat << 'EOF' > final_deploy/manifest.json
           {
             "id": "custom-timestamps",
             "name": "Custom Timestamps",
-            "description": "تعديل شكل وقت الرسائل بالكامل",
+            "description": "Modify message timestamps completely",
             "author": "Adham",
             "version": "1.0.0",
             "dist.script": "index.js"
@@ -38,5 +41,5 @@ jobs:
           git config user.email "bot@github.com"
           git checkout -b ready
           git add .
-          git commit -m "Deploy from js/index.ts"
+          git commit -m "Deploy absolute JS path with English manifest"
           git push -f https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git ready

@@ -20,13 +20,21 @@ jobs:
         run: npm install --legacy-peer-deps
       - name: Build Plugins
         run: npx tsx node_modules/@revenge-mod/plugin-cli/src/main.ts build
+      - name: Force Align Files
+        run: |
+          # تأكد من إنشاء مسار التوزيع ونسخ الـ manifest والـ js معاً
+          mkdir -p plugins/custom-timestamps/dist
+          if [ -f "dist/index.js" ]; then
+            cp dist/index.js plugins/custom-timestamps/dist/index.js
+          elif [ -f "index.js" ]; then
+            cp index.js plugins/custom-timestamps/dist/index.js
+          fi
+          ls -la plugins/custom-timestamps/dist/
       - name: Deploy to Build Branch
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -B build
-          
-          # رفع المجلد بالكامل متضمناً الـ manifest والـ dist بدون علامات النجمة
           git add plugins/ -f
-          git commit -m "Deploy standard plugin structure successfully" || true
+          git commit -m "🚀 Definitive fix: Force manifest and JS together" || true
           git push origin build -f
